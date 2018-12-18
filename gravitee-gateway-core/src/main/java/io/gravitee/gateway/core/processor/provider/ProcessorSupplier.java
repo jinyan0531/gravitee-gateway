@@ -13,19 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.gateway.core.processor;
+package io.gravitee.gateway.core.processor.provider;
 
-import io.gravitee.gateway.api.handler.Handler;
+import io.gravitee.gateway.api.ExecutionContext;
+import io.gravitee.gateway.core.processor.Processor;
+
+import java.util.function.Supplier;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
-public interface Processor<T> extends Handler<T> {
+public class ProcessorSupplier<T, P extends Processor<T>> implements ProcessorProvider<T, P> {
 
-    Processor<T> handler(Handler<T> handler);
+    private final Supplier<P> supplier;
 
-    Processor<T> errorHandler(Handler<ProcessorFailure> handler);
+    public ProcessorSupplier(Supplier<P> supplier) {
+        this.supplier = supplier;
+    }
 
-    Processor<T> exitHandler(Handler<Void> handler);
+    @Override
+    public P provide(ExecutionContext context) {
+        return supplier.get();
+    }
 }

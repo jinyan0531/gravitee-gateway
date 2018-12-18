@@ -19,10 +19,9 @@ import com.google.common.base.Throwables;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.gateway.api.handler.Handler;
 import io.gravitee.gateway.api.stream.BufferedReadWriteStream;
-import io.gravitee.gateway.core.processor.Processor;
-import io.gravitee.gateway.core.processor.ProcessorContext;
 import io.gravitee.gateway.core.processor.ProcessorFailure;
 import io.gravitee.gateway.core.processor.StreamableProcessor;
 import io.gravitee.gateway.policy.Policy;
@@ -41,18 +40,17 @@ import java.util.Objects;
  * @author GraviteeSource Team
  */
 public abstract class PolicyChain extends BufferedReadWriteStream
-        implements io.gravitee.policy.api.PolicyChain, StreamableProcessor<PolicyResult> {
+        implements io.gravitee.policy.api.PolicyChain, StreamableProcessor<ExecutionContext, Buffer> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected static final PolicyResult SUCCESS_POLICY_CHAIN = new SuccessPolicyResult();
 
-    protected Handler<PolicyResult> resultHandler;
+    protected Handler<ExecutionContext> resultHandler;
     protected Handler<ProcessorFailure> errorHandler;
-    protected Handler<ProcessorFailure> streamErrorHandler;
-    protected Handler<PolicyResult> exitHandler;
+    private Handler<ProcessorFailure> streamErrorHandler;
     protected final List<Policy> policies;
-    protected final Iterator<Policy> policyIterator;
+    private final Iterator<Policy> policyIterator;
     protected final ExecutionContext executionContext;
 
     protected PolicyChain(List<Policy> policies, final ExecutionContext executionContext) {
@@ -81,9 +79,9 @@ public abstract class PolicyChain extends BufferedReadWriteStream
                     errorHandler.handle(new PolicyChainProcessorFailure(PolicyResult.failure(null)));
                 }
             }
-        } else {
+        } /*else {
             resultHandler.handle(null);
-        }
+        }*/
     }
 
     @Override
@@ -97,31 +95,31 @@ public abstract class PolicyChain extends BufferedReadWriteStream
     }
 
     @Override
-    public void process(ProcessorContext context) {
-        doNext(context.getRequest(), context.getResponse());
+    public void handle(ExecutionContext context) {
+        doNext(context.request(), context.response());
+        resultHandler.handle(context);
     }
 
     @Override
-    public StreamableProcessor<PolicyResult> handler(Handler<PolicyResult> handler) {
+    public StreamableProcessor<ExecutionContext, Buffer> handler(Handler<ExecutionContext> handler) {
         this.resultHandler = handler;
         return this;
     }
 
     @Override
-    public StreamableProcessor<PolicyResult> errorHandler(Handler<ProcessorFailure> handler) {
+    public StreamableProcessor<ExecutionContext, Buffer> errorHandler(Handler<ProcessorFailure> handler) {
         this.errorHandler = handler;
         return this;
     }
 
     @Override
-    public StreamableProcessor<PolicyResult> streamErrorHandler(Handler<ProcessorFailure> handler) {
+    public StreamableProcessor<ExecutionContext, Buffer> streamErrorHandler(Handler<ProcessorFailure> handler) {
         this.streamErrorHandler = handler;
         return this;
     }
 
     @Override
-    public StreamableProcessor<PolicyResult> exitHandler(Handler<PolicyResult> handler) {
-        this.exitHandler = handler;
+    public StreamableProcessor<ExecutionContext, Buffer> exitHandler(Handler<Void> handler) {
         return this;
     }
 

@@ -27,7 +27,7 @@ import io.gravitee.gateway.reactor.handler.DummyReactorHandler;
 import io.gravitee.gateway.reactor.handler.ReactorHandlerRegistry;
 import io.gravitee.gateway.reactor.handler.ReactorHandlerResolver;
 import io.gravitee.gateway.reactor.handler.context.ExecutionContextFactory;
-import io.gravitee.gateway.reactor.handler.transaction.TransactionHandlerFactory;
+import io.gravitee.gateway.reactor.processor.transaction.TransactionProcessorFactory;
 import io.gravitee.gateway.reactor.impl.DefaultReactor;
 import io.gravitee.reporter.api.http.Metrics;
 import org.junit.Assert;
@@ -69,7 +69,7 @@ public class ReactorTest {
     private DummyReactorHandler dummyReactorHandler = new DummyReactorHandler();
 
     @Spy
-    private TransactionHandlerFactory transactionHandlerFactory = new TransactionHandlerFactory();
+    private TransactionProcessorFactory transactionHandlerFactory = new TransactionProcessorFactory();
 
     @Before
     public void setUp() throws Exception {
@@ -85,7 +85,7 @@ public class ReactorTest {
         when(request.path()).thenReturn("/team");
         when(request.metrics()).thenReturn(Metrics.on(System.currentTimeMillis()).build());
 
-        dummyReactorHandler.setExecutionContextFactory(executionContextFactory);
+//        dummyReactorHandler.setExecutionContextFactory(executionContextFactory);
 
         when(handlerResolver.resolve(any(Request.class))).thenReturn(dummyReactorHandler);
 
@@ -93,8 +93,8 @@ public class ReactorTest {
         Response proxyResponse = mock(Response.class);
         when(proxyResponse.headers()).thenReturn(new HttpHeaders());
 
-        reactor.route(request, proxyResponse, response -> {
-            Assert.assertEquals(HttpStatusCode.OK_200, response.status());
+        reactor.route(request, proxyResponse, context -> {
+            Assert.assertEquals(HttpStatusCode.OK_200, context.response().status());
             lock.countDown();
         });
 

@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.gateway.reactor.handler.transaction;
+package io.gravitee.gateway.reactor.processor.transaction;
 
-import io.gravitee.gateway.api.Request;
-import io.gravitee.gateway.api.Response;
-import io.gravitee.gateway.api.handler.Handler;
+import io.gravitee.gateway.api.ExecutionContext;
+import io.gravitee.gateway.core.processor.Processor;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
-public class TransactionHandlerFactory {
+public class TransactionProcessorFactory {
 
-    @Value("${handlers.request.transaction.header:" + TransactionHandler.DEFAULT_TRANSACTIONAL_ID_HEADER + "}")
-    private String transactionHeader = TransactionHandler.DEFAULT_TRANSACTIONAL_ID_HEADER;
+    @Value("${handlers.request.transaction.header:" + TransactionProcessor.DEFAULT_TRANSACTIONAL_ID_HEADER + "}")
+    private String transactionHeader = TransactionProcessor.DEFAULT_TRANSACTIONAL_ID_HEADER;
 
-    public Handler<Request> create(Handler<Request> next, Response response) {
-        return new TransactionHandler(transactionHeader, next, response);
+    public Processor<ExecutionContext> create() {
+        return new TransactionProcessor(transactionHeader);
     }
 }

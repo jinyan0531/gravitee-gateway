@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.gravitee.gateway.core.processor;
+package io.gravitee.gateway.core.processor.chain;
 
-import io.gravitee.gateway.api.ExecutionContext;
-import io.gravitee.gateway.api.Request;
-import io.gravitee.gateway.api.Response;
+import io.gravitee.gateway.core.processor.Processor;
+
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author David BRASSELY (david.brassely at graviteesource.com)
  * @author GraviteeSource Team
  */
-public interface ProcessorProvider<T, P extends Processor<T>> {
+public class SimpleProcessorChain<T> extends ProcessorChain<Processor<T>, T> {
 
-    P provide(Request request, Response response, ExecutionContext executionContext);
+    public SimpleProcessorChain(List<Processor<T>> providers) {
+        super(providers);
+    }
+
+    @Override
+    public Iterator<Processor<T>> iterator() {
+        return processors.iterator();
+    }
 }
